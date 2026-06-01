@@ -1,0 +1,65 @@
+esphome:
+  name: delta-wallbox
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+logger:
+
+api:
+
+ota:
+  - platform: esphome
+    password: "XXXXXXXXXX" # Replace with a valid password for OTA 
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+esp32_ble_tracker:
+
+esp32_ble:
+  io_capability: keyboard_only
+  auth_req_mode: sc_mitm_bond
+
+# Real-time clock required for the wallbox to synchronize its internal logs
+time:
+  - platform: sntp
+    id: sntp_time
+
+ble_client:
+  - id: delta_ble_client
+    mac_address: "xx:xx:xx:xx:xx:xx" # Replace with the mac address of the Delta Wallbox
+
+delta_wallbox:
+  id: my_charger
+  ble_client_id: delta_ble_client
+  password: "PASSWORD_HERE"        # This is the password given to you by the Delta Wallbox (needed) (quotes required)
+  pin: PIN_HERE                    # BLE pairing PIN/passkey if the wallbox. Given to you by the Delta Wallbox (needed) (PIN_HERE should be 6 digits, no quotes)
+  user: "admin"                    # Default: "admin" (future option)
+  time_id: sntp_time
+  update_interval: 15s             # You can increase this if you need it to update less frequently
+
+sensor:
+  - platform: delta_wallbox
+    delta_wallbox_id: my_charger
+    charger_state:
+      name: "Charger Raw State"
+
+text_sensor:
+  - platform: delta_wallbox
+    delta_wallbox_id: my_charger
+    bt_fw_version:
+      name: "Charger Bluetooth FW Version"
+    model_name:
+      name: "Charger Model"
+
+button:
+  - platform: delta_wallbox
+    delta_wallbox_id: my_charger
+    start_charging:
+      name: "Start Charging"
+    stop_charging:
+      name: "Stop Charging"
