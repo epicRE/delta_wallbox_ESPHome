@@ -1,6 +1,41 @@
-# delta_wallbox_ESPHome
+# Delta AC MAX Basic Wallbox communication via ESPHome
 
-ESPHome component implementation for the Delta AC MAX Basic
+## ! WARNING !
+**This is an experimental system, use at your own risk. I can't be held liable for any and all issues you might face afterward using this code. This includes but not limited to damages to the EVSE/EV/buildings.**
 
-Delta AC MAX Basic is a simple wallbox that is provided by Delta Taiwan - https://landing.deltaww.com/en-US/products/EV-Charging/AC-MAX 
+## Introduction
+This repo details what is needed for you to operate a Delta AC MAX Basic with the ESPHome component implementation (and ESPHome intergration).
+
+Delta AC MAX Basic is a simple EV wallbox that is provided by Delta based in Taiwan - [https://landing.deltaww.com/en-US/products/EV-Charging/AC-MAX](https://landing.deltaww.com/en-US/products/EV-Charging/AC-MAX) 
+
+## How to test 
+The following assumes the ESP32 device is connected to this Linux system and it is idetified as ttyUSB0 (use `dmesg` to see what device it was assigned).
+
+In a new folder do the following (you will need a bit of space for all the packages needed by esphome. (You will also need Python 3.11 and above)
+
+```bash
+python -m pip install --upgrade pip
+python3 -m venv .venv
+source .venv/bin/activate
+git clone https://github.com/esphome/esphome
+cd esphome/components
+git clone https://github.com/epicRE/delta_wallbox_ESPHome delta_wallbox
+cd esphome
+python -m pip install -e ./esphome-dev
+esphome config delta-wallbox.yaml
+esphome compile delta-wallbox.yaml
+esphome run delta-wallbox.yaml --device /dev/ttyUSB0
+```
+Get the IP address and now add the device to your Home Assisstant ESPHome intergration. 
+
+## Details about Charger Raw State (numerical values) (not confirmed, only observed) 
+
+| Charger Raw State  | Description     |
+| ------------- | ------------- |
+| 161 | Unplugged |
+| 177 | Preparing/Finishing |
+| 178 | Suspended EV |
+| 15  | Suspended EVSE |
+| 194 | Charging |
+
 
