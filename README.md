@@ -1,7 +1,7 @@
 # Delta AC MAX Basic Wallbox communication via ESPHome
 
 ## ! WARNING !
-**This is an experimental system, use at your own risk. I can't be held liable for any and all issues you might face afterward using this code. This includes but not limited to damages to the EVSE/EV/buildings.**
+**This is an experimental system, use at your own risk. I can't be held liable for any and all issues you might face afterward using this code. This includes but not limited to damages to EVSE/EV/buildings etc.**
 
 ## Introduction
 This repo details what is needed for you to operate a Delta AC MAX Basic with the ESPHome component implementation (and ESPHome intergration).
