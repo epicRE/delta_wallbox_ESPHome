@@ -30,12 +30,12 @@ Get the IP address and now add the device to your Home Assisstant ESPHome interg
 
 ## Details about Charger Raw State (numerical values) (not confirmed, only observed) 
 
-| Charger Raw State  | Description     |
+| Charger Raw State (dec) |Charger Raw State (hex) | Description     |
 | ------------- | ------------- |
-| 161 | Unplugged |
-| 177 | Preparing/Finishing |
-| 178 | Suspended EV |
-| 15  | Suspended EVSE |
-| 194 | Charging |
-
+| 161 |`0xA1` | Unplugged/No Session |
+| 177 |`0xB1` | Can start charging |
+| 178 |`0xB2` | Can stop charging  |
+| 193 |`0xC1` | Can start charging |
+| 194 |`0xC2` | Charging |
+| 15  |`0xF`  | Can start charging |
 
