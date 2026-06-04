@@ -18,10 +18,10 @@ python -m pip install --upgrade pip
 python3 -m venv .venv
 source .venv/bin/activate
 git clone https://github.com/esphome/esphome
-cd esphome/components
+cd esphome/esphome/components
 git clone https://github.com/epicRE/delta_wallbox_ESPHome delta_wallbox
-cd esphome
-python -m pip install -e ./esphome-dev
+cd ../../..
+python -m pip install -e ./esphome
 esphome config delta-wallbox.yaml
 esphome compile delta-wallbox.yaml
 esphome run delta-wallbox.yaml --device /dev/ttyUSB0
