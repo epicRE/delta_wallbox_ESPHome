@@ -5,6 +5,7 @@
 #include "esphome/core/component.h"
 #include "esphome/components/button/button.h"
 #include "esphome/components/ble_client/ble_client.h"
+#include "esphome/components/number/number.h"
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/core/helpers.h"
@@ -56,6 +57,7 @@ class DeltaWallbox : public esphome::ble_client::BLEClientNode, public PollingCo
   void set_charging_time_sensor(sensor::Sensor *s) { charging_time_sensor_ = s; }
   void set_charger_state_sensor(sensor::Sensor *s) { charger_state_sensor_ = s; }
   void set_max_current_sensor(sensor::Sensor *s) { max_current_sensor_ = s; }
+  void set_max_current_number(number::Number *n) { max_current_number_ = n; }
 
   // Text Sensors
   void set_serial_number_sensor(text_sensor::TextSensor *s) { serial_number_sensor_ = s; }
@@ -66,6 +68,7 @@ class DeltaWallbox : public esphome::ble_client::BLEClientNode, public PollingCo
 
   // Switch Interface
   void set_charging_state(bool state);
+  void set_max_current(float current);
   void start_charging();
   void stop_charging();
   bool is_charging();
@@ -96,6 +99,8 @@ class DeltaWallbox : public esphome::ble_client::BLEClientNode, public PollingCo
   bool pending_charging_state_{false};
   bool has_pending_charging_action_{false};
   bool is_charging_{false};
+  uint8_t min_current_limit_{0};
+  uint8_t max_current_limit_{255};
 
   // Sensors
   sensor::Sensor *power_sensor_{nullptr};
@@ -103,6 +108,7 @@ class DeltaWallbox : public esphome::ble_client::BLEClientNode, public PollingCo
   sensor::Sensor *charging_time_sensor_{nullptr};
   sensor::Sensor *charger_state_sensor_{nullptr};
   sensor::Sensor *max_current_sensor_{nullptr};
+  number::Number *max_current_number_{nullptr};
 
   // Text Sensors
   text_sensor::TextSensor *serial_number_sensor_{nullptr};
@@ -120,6 +126,11 @@ class DeltaWallboxStartChargingButton : public button::Button, public Parented<D
 class DeltaWallboxStopChargingButton : public button::Button, public Parented<DeltaWallbox> {
  protected:
   void press_action() override { this->parent_->stop_charging(); }
+};
+
+class DeltaWallboxMaxCurrentNumber : public number::Number, public Parented<DeltaWallbox> {
+ protected:
+  void control(float value) override { this->parent_->set_max_current(value); }
 };
 
 }  // namespace esphome::delta_wallbox

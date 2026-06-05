@@ -1,6 +1,7 @@
 #include "delta_wallbox.h"
 #include "esphome/core/log.h"
 #include <algorithm>
+#include <cmath>
 #include <cstring>
 
 #ifdef USE_ESP32
@@ -448,11 +449,17 @@ void DeltaWallbox::handle_frame(const std::vector<uint8_t> &frame) {
           std::vector<uint8_t> cmd = build_modbus_frame("010301120002");
           this->write_frame(cmd);
         } else if (byte_count == 4) {
-          // Parsing 0x0112 max output setting (2 registers)
-          uint32_t current_raw = (frame[3] << 24) | (frame[4] << 16) | (frame[5] << 8) | frame[6];
-          float amps = current_raw / 10.0f;
+          // Parsing 0x0112 max output setting (2 registers).
+          // App-side parsing treats this as a 4-byte block with max/current/min bytes.
+          this->max_current_limit_ = frame[4];
+          uint8_t current_setting = frame[5];
+          this->min_current_limit_ = frame[6];
+          float amps = current_setting;
           if (this->max_current_sensor_ != nullptr) {
             this->max_current_sensor_->publish_state(amps);
+          }
+          if (this->max_current_number_ != nullptr) {
+            this->max_current_number_->publish_state(amps);
           }
 
           // Query system serial number next
@@ -478,10 +485,22 @@ void DeltaWallbox::handle_frame(const std::vector<uint8_t> &frame) {
           }
         }
       } else if (frame[1] == 0x06) {
-        // Confirmation frame of Start/Stop write actions
-        ESP_LOGI(TAG, "Wallbox charging command successfully acknowledged.");
-        this->is_charging_ = this->pending_charging_state_;
-        this->has_pending_charging_action_ = false;
+        const uint16_t register_addr = (static_cast<uint16_t>(frame[2]) << 8) | frame[3];
+        if (register_addr == 0x0112) {
+          uint8_t accepted_current = frame[5];
+          ESP_LOGI(TAG, "Wallbox max current command acknowledged: %u A", accepted_current);
+          if (this->max_current_sensor_ != nullptr) {
+            this->max_current_sensor_->publish_state(accepted_current);
+          }
+          if (this->max_current_number_ != nullptr) {
+            this->max_current_number_->publish_state(accepted_current);
+          }
+        } else {
+          // Confirmation frame of Start/Stop write actions
+          ESP_LOGI(TAG, "Wallbox charging command successfully acknowledged.");
+          this->is_charging_ = this->pending_charging_state_;
+          this->has_pending_charging_action_ = false;
+        }
       }
       break;
     }
@@ -517,6 +536,27 @@ void DeltaWallbox::set_charging_state(bool state) {
     cmd = build_modbus_frame("010601030001");
   }
 
+  this->write_frame(cmd);
+  this->last_tx_time_ = millis();
+}
+
+void DeltaWallbox::set_max_current(float current) {
+  if (!this->is_connected()) {
+    ESP_LOGW(TAG, "Cannot set maximum current while wallbox is not fully connected.");
+    return;
+  }
+
+  int requested_current = static_cast<int>(std::lround(current));
+  if (this->min_current_limit_ <= this->max_current_limit_) {
+    requested_current = std::max<int>(requested_current, this->min_current_limit_);
+    requested_current = std::min<int>(requested_current, this->max_current_limit_);
+  } else {
+    requested_current = std::max(0, std::min(255, requested_current));
+  }
+
+  ESP_LOGI(TAG, "Setting wallbox maximum current to %d A", requested_current);
+  std::vector<uint8_t> cmd{0x01, 0x06, 0x01, 0x12, 0x00, static_cast<uint8_t>(requested_current)};
+  append_crc(cmd);
   this->write_frame(cmd);
   this->last_tx_time_ = millis();
 }
