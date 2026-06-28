@@ -73,7 +73,3 @@ number:
     delta_wallbox_id: my_charger
     max_current:
       name: "Charger Maximum Current Setting"
-    min_value: 6
-    max_value: 32
-    step: 1
-    
