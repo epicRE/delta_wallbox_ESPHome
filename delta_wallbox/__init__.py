@@ -1,10 +1,12 @@
 import esphome.codegen as cg
-import esphome.config_validation as cv
 from esphome.components import ble_client, time
+import esphome.config_validation as cv
 from esphome.const import CONF_ID, CONF_PASSWORD, CONF_PIN, CONF_TIME_ID
+from esphome.types import ConfigType
 
 CODEOWNERS = ["@epicRE"]
 DEPENDENCIES = ["ble_client"]
+DOMAIN = "delta_wallbox"
 MULTI_CONF = True
 
 CONF_DELTA_WALLBOX_ID = "delta_wallbox_id"
@@ -30,7 +32,7 @@ CONFIG_SCHEMA = (
 )
 
 
-async def to_code(config):
+async def to_code(config: ConfigType) -> None:
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
     await ble_client.register_ble_node(var, config)
@@ -43,4 +45,3 @@ async def to_code(config):
     if time_id := config.get(CONF_TIME_ID):
         time_ = await cg.get_variable(time_id)
         cg.add(var.set_time_id(time_))
-

@@ -1,6 +1,7 @@
 import esphome.codegen as cg
-import esphome.config_validation as cv
 from esphome.components import button
+import esphome.config_validation as cv
+from esphome.types import ConfigType
 
 from . import CONF_DELTA_WALLBOX_ID, DeltaWallbox, delta_wallbox_ns
 
@@ -31,7 +32,7 @@ CONFIG_SCHEMA = cv.Schema(
 )
 
 
-async def to_code(config):
+async def to_code(config: ConfigType) -> None:
     parent = await cg.get_variable(config[CONF_DELTA_WALLBOX_ID])
 
     if start_button_config := config.get(CONF_START_CHARGING):

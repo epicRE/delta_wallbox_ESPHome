@@ -2,12 +2,15 @@
 
 #ifdef USE_ESP32
 
+#include <array>
+
 #include "esphome/core/component.h"
 #include "esphome/components/button/button.h"
 #include "esphome/components/ble_client/ble_client.h"
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/core/helpers.h"
+#include "esphome/core/string_ref.h"
 
 #ifdef USE_TIME
 #include "esphome/components/time/real_time_clock.h"
@@ -15,19 +18,22 @@
 
 namespace esphome::delta_wallbox {
 
+// Largest FC03 response: unit, function, byte count, 255 data bytes, CRC.
+static constexpr size_t MAX_FRAME_LEN = 260;
+
 enum class DeltaState {
-  STATE_IDLE,
-  STATE_GET_MODEL,
-  STATE_GET_BT_FW_VERSION,
-  STATE_CHECK_PAIRING,
-  STATE_GET_LOGIN_USER,
-  STATE_GET_LOGIN_RESULT0,
-  STATE_SEND_LOGIN_CREDENTIALS,
-  STATE_GET_LOGIN_RESULT,
-  STATE_GET_LOGIN_ROLE,
-  STATE_TIME_SYNC,
-  STATE_GET_CHARGER_FW_VERSION,
-  STATE_CONNECTED,
+  DELTA_STATE_IDLE,
+  DELTA_STATE_GET_MODEL,
+  DELTA_STATE_GET_BT_FW_VERSION,
+  DELTA_STATE_CHECK_PAIRING,
+  DELTA_STATE_GET_LOGIN_USER,
+  DELTA_STATE_GET_LOGIN_RESULT0,
+  DELTA_STATE_SEND_LOGIN_CREDENTIALS,
+  DELTA_STATE_GET_LOGIN_RESULT,
+  DELTA_STATE_GET_LOGIN_ROLE,
+  DELTA_STATE_TIME_SYNC,
+  DELTA_STATE_GET_CHARGER_FW_VERSION,
+  DELTA_STATE_CONNECTED,
 };
 
 class DeltaWallbox : public esphome::ble_client::BLEClientNode, public PollingComponent {
@@ -40,8 +46,8 @@ class DeltaWallbox : public esphome::ble_client::BLEClientNode, public PollingCo
   void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) override;
   void dump_config() override;
 
-  void set_user(const std::string &user) { user_ = user; }
-  void set_password(const std::string &password) { password_ = password; }
+  void set_user(const char *user) { this->user_ = StringRef(user); }
+  void set_password(const char *password) { this->password_ = StringRef(password); }
   void set_pin(uint32_t pin) {
     pin_ = pin;
     has_pin_ = true;
@@ -70,16 +76,21 @@ class DeltaWallbox : public esphome::ble_client::BLEClientNode, public PollingCo
   void stop_charging();
   bool is_charging();
 
-  bool is_connected() { return this->node_state == esp32_ble_tracker::ClientState::ESTABLISHED && this->state_ == DeltaState::STATE_CONNECTED; }
+  bool is_connected() {
+    return this->node_state == esp32_ble_tracker::ClientState::ESTABLISHED &&
+           this->state_ == DeltaState::DELTA_STATE_CONNECTED;
+  }
 
  protected:
-  void write_frame(const std::vector<uint8_t> &frame);
+  void write_frame(const uint8_t *frame, size_t len);
+  void send_frame(const uint8_t *body, size_t len);
   void send_next_state_command();
-  void handle_frame(const std::vector<uint8_t> &frame);
+  void handle_frame(const uint8_t *frame, size_t len);
+  void drop_rx_bytes(size_t count);
   void reset_state();
 
-  std::string user_;
-  std::string password_;
+  StringRef user_;
+  StringRef password_;
   uint32_t pin_{0};
   bool has_pin_{false};
 #ifdef USE_TIME
@@ -88,8 +99,9 @@ class DeltaWallbox : public esphome::ble_client::BLEClientNode, public PollingCo
 
   uint16_t rx_char_handle_{0};
   uint16_t tx_char_handle_{0};
-  DeltaState state_{DeltaState::STATE_IDLE};
-  std::vector<uint8_t> rx_buffer_;
+  DeltaState state_{DeltaState::DELTA_STATE_IDLE};
+  std::array<uint8_t, MAX_FRAME_LEN> rx_buffer_{};
+  size_t rx_len_{0};
   uint32_t last_tx_time_{0};
   uint8_t pairing_attempts_{0};
   bool pairing_in_progress_{false};

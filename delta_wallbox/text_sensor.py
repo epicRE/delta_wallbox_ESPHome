@@ -1,6 +1,8 @@
 import esphome.codegen as cg
-import esphome.config_validation as cv
 from esphome.components import text_sensor
+import esphome.config_validation as cv
+from esphome.types import ConfigType
+
 from . import CONF_DELTA_WALLBOX_ID, DeltaWallbox
 
 DEPENDENCIES = ["delta_wallbox"]
@@ -23,7 +25,7 @@ CONFIG_SCHEMA = cv.Schema(
 )
 
 
-async def to_code(config):
+async def to_code(config: ConfigType) -> None:
     parent = await cg.get_variable(config[CONF_DELTA_WALLBOX_ID])
 
     if serial_number_config := config.get(CONF_SERIAL_NUMBER):
@@ -45,4 +47,3 @@ async def to_code(config):
     if error_code_config := config.get(CONF_ERROR_CODE):
         sens = await text_sensor.new_text_sensor(error_code_config)
         cg.add(parent.set_error_code_sensor(sens))
-

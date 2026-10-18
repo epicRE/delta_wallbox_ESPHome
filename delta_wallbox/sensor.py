@@ -1,18 +1,20 @@
 import esphome.codegen as cg
-import esphome.config_validation as cv
 from esphome.components import sensor
+import esphome.config_validation as cv
 from esphome.const import (
-    CONF_POWER,
     CONF_ENERGY,
-    DEVICE_CLASS_POWER,
+    CONF_POWER,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
+    UNIT_AMPERE,
     UNIT_KILOWATT,
     UNIT_KILOWATT_HOURS,
-    UNIT_AMPERE,
     UNIT_MINUTE,
 )
+from esphome.types import ConfigType
+
 from . import CONF_DELTA_WALLBOX_ID, DeltaWallbox
 
 DEPENDENCIES = ["delta_wallbox"]
@@ -51,7 +53,7 @@ CONFIG_SCHEMA = cv.Schema(
 )
 
 
-async def to_code(config):
+async def to_code(config: ConfigType) -> None:
     parent = await cg.get_variable(config[CONF_DELTA_WALLBOX_ID])
 
     if power_config := config.get(CONF_POWER):
@@ -73,4 +75,3 @@ async def to_code(config):
     if max_current_config := config.get(CONF_MAX_CURRENT):
         sens = await sensor.new_sensor(max_current_config)
         cg.add(parent.set_max_current_sensor(sens))
-
