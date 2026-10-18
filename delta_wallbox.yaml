@@ -55,7 +55,9 @@ text_sensor:
       name: "Charger Bluetooth FW Version"
     model_name:
       name: "Charger Model"
-
+   serial_number:
+      name: "Charger Serial Number"
+      
 button:
   - platform: delta_wallbox
     delta_wallbox_id: my_charger
