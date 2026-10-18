@@ -309,6 +309,8 @@ void DeltaWallbox::handle_frame(const uint8_t *frame, size_t len) {
   }
 
   switch (this->state_) {
+    case DeltaState::DELTA_STATE_IDLE:
+      break;  // No command is pending; ignore the frame.
     case DeltaState::DELTA_STATE_GET_MODEL: {
       char model[MAX_FRAME_LEN];
       const size_t data_len = std::min<size_t>(frame[2], len - READ_RESPONSE_OVERHEAD);
